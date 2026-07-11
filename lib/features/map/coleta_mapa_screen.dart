@@ -17,7 +17,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
   LatLng? _localizacaoAtual;
 
   double? _precisaoEmMetros = double.infinity; // variável para precisão do GPS
-  final double _precisaoMinimaAceitavel = 4.0; // Limite de 4 metros para permitir coleta
+  final double _precisaoMinimaAceitavel = 10.0; // Limite de 4 metros para permitir coleta
 
   final MapController _mapController = MapController();
   bool _carregandoMapa = true;
@@ -350,7 +350,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                 const Padding(
                   padding: EdgeInsets.only(top: 8.0),
                   child: Text(
-                    'Sinal de GPS fraco. Aguarde a precisão ficar menor que 4m.', 
+                    'Sinal de GPS fraco. Aguarde a precisão ficar menor que 10m.', 
                     style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
