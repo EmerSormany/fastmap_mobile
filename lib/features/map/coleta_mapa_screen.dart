@@ -311,10 +311,10 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                         horizontal: 24,
                         vertical: 12,
                       ),
-                      backgroundColor: precisaoBoa ? Colors.teal: Colors.grey,
+                      backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: _localizacaoAtual == null || !precisaoBoa
+                    onPressed: _localizacaoAtual == null 
                         ? null
                         : _coletarPontoAtual,
                   ),
@@ -345,26 +345,14 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                 ],
               ),
 
-              if (!precisaoBoa) 
-
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Sinal de GPS fraco. Aguarde a precisão ficar menor que 10m.', 
-                    style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                if (_pontosColetados.length < 3) 
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      'Caminhe e colete pelo menos 3 pontos para fechar a área.',
+                      style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                    ),
                   ),
-                )
-
-              else if (_pontosColetados.length < 3)
-
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Caminhe e colete pelo menos 3 pontos para fechar a área.',
-                    style: TextStyle(color: Colors.redAccent, fontSize: 12),
-                  ),
-                ),
 
             ],
           ),
