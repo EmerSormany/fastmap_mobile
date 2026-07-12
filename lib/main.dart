@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/form/formulario_terreno_screen.dart';
+import 'features/form/formulario_login_screen.dart';
 
 void main() {
   runApp(const FastMapApp());
@@ -22,7 +22,7 @@ class FastMapApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // A primeira tela que o app vai abrir
-      home: const FormularioTerrenoScreen(), 
+      home: const FormularioLoginScreen(), 
     );
   }
 }
