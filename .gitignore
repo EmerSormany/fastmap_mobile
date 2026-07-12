@@ -80,3 +80,6 @@ iOS/XCode related
 /ios//xcshareddata/workspacexcuserdata/
 /ios//xcuserdata/
 *.xcworkspace/
+
+config.json
+
