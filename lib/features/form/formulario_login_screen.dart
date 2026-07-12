@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'formulario_terreno_screen.dart'; // Importa a próxima tela
+import 'controllers/login_controller.dart';
+import 'formulario_cadastro_screen.dart'; // Importa a tela do seu colega
 
 class FormularioLoginScreen extends StatefulWidget {
   const FormularioLoginScreen({super.key});
@@ -10,9 +11,24 @@ class FormularioLoginScreen extends StatefulWidget {
 
 class _FormularioLoginScreenState extends State<FormularioLoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _controller = LoginController(); // Instancia o controlador de login
+
   String email = '';
   String senha = '';
-  bool _senhaOculta = true; // Controla se a senha aparece ou fica com bolinhas
+  bool _senhaOculta = true;
+
+  void _onEntrarPressed() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      
+      // Executa o login seguro através do controller
+      _controller.logarUsuario(
+        context: context,
+        email: email,
+        senha: senha,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +99,6 @@ class _FormularioLoginScreenState extends State<FormularioLoginScreen> {
                     labelText: 'Senha',
                     border: OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
-                    // Botão de "olhinho" para mostrar/esconder a senha
                     suffixIcon: IconButton(
                       icon: Icon(
                         _senhaOculta ? Icons.visibility_off : Icons.visibility,
@@ -109,7 +124,7 @@ class _FormularioLoginScreenState extends State<FormularioLoginScreen> {
 
                 const Spacer(flex: 2),
 
-                // Botão de Entrar
+                // Botão de Entrar conectado ao Controller
                 ElevatedButton.icon(
                   icon: const Icon(Icons.login),
                   label: const Text('ENTRAR'),
@@ -118,28 +133,17 @@ class _FormularioLoginScreenState extends State<FormularioLoginScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-
-                      // Navegação para a tela de Novo Projeto do seu colega
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FormularioTerrenoScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _onEntrarPressed,
                 ),
                 const SizedBox(height: 16),
 
-                // Botão para ir para a tela de Cadastro
+                // Botão para ir para a tela de Cadastro do seu amigo
                 TextButton(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tela de cadastro em desenvolvimento...'),
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CadastroTerrenoScreen(),
                       ),
                     );
                   },

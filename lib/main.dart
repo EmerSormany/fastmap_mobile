@@ -1,28 +1,17 @@
 import 'package:flutter/material.dart';
-import 'features/form/formulario_login_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'core/constants/environment.dart';
+import 'core/models/fast_map_app.dart';
 
-void main() {
+void main() async {
+  // Garante que os componentes do Flutter carreguem antes do banco
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa o Supabase usando as variáveis do arquivo centralizado
+  await Supabase.initialize(
+    url: Environment.supabaseUrl, 
+    anonKey: Environment.supabaseAnonKey,
+  );
+
   runApp(const FastMapApp());
-}
-
-class FastMapApp extends StatelessWidget {
-  const FastMapApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FastMap Mobile',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
-          primary: Colors.teal.shade700,
-          secondary: Colors.orange.shade600,
-        ),
-        useMaterial3: true,
-      ),
-      // A primeira tela que o app vai abrir
-      home: const FormularioLoginScreen(), 
-    );
-  }
 }

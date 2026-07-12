@@ -19,12 +19,11 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
   final Distance _distanceCalculator = const Distance();
   String _textoEscala = "Calculando...";
 
-  // Função que converte o zoom do mapa em metros na vida real (Projeção de Mercator)
+  // Função que converte o zoom do mapa em metros na vida real
   void _atualizarEscala(double lat, double zoom) {
     // 156543.03392 é a circunferência do Equador dividida pelo tamanho do bloco do mapa (256)
     double metrosPorPixel = 156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
     
-    // A nossa barra desenhada tem exatamente 80 pixels (40 preto + 40 branco)
     double distanciaNaBarra = metrosPorPixel * 80.0; 
     
     String texto;
@@ -36,7 +35,6 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
 
     // Evita loop de atualização desnecessário e atualiza a tela
     if (_textoEscala != texto && mounted) {
-      // Future.microtask garante que o texto só mude após o mapa terminar de ser desenhado
       Future.microtask(() {
         if (mounted) {
           setState(() {
@@ -47,7 +45,7 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
     }
   }
 
-  // Função que calcula o ponto central entre dois vértices para desenhar a legenda da distância
+  // calcula o ponto central entre dois vértices para desenhar a legenda da distância
   LatLng _calcularPontoMedio(LatLng p1, LatLng p2) {
     return LatLng(
       (p1.latitude + p2.latitude) / 2,
@@ -116,24 +114,19 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
       ),
       body: Stack(
         children: [
-          // =====================================
-          // MAPA COM ENQUADRAMENTO AUTOMÁTICO
-          // =====================================
+
           FlutterMap(
             options: MapOptions(
-              // Essa opção calcula a caixa limite que envolve todos os pontos 
-              // e centraliza a câmera com um zoom perfeito para caber na tela.
               initialCameraFit: CameraFit.bounds(
                 bounds: LatLngBounds.fromPoints(widget.pontos),
-                padding: const EdgeInsets.all(60.0), // Margem de respiro
+                padding: const EdgeInsets.all(60.0), 
               ),
-              // Acionamos a função de escala toda vez que a câmera do mapa se mover ou der zoom
+              maxZoom: 18,
               onPositionChanged: (camera, hasGesture) {
                 _atualizarEscala(camera.center.latitude, camera.zoom);
               },
               interactionOptions: const InteractionOptions(
-                // Opcional: Impedir que o usuário rotacione o mapa com os dedos 
-                // para garantir que o Norte fique sempre para cima
+                // garante que o Norte fique sempre para cima
                 flags: InteractiveFlag.all & ~InteractiveFlag.rotate, 
               ),
             ),
@@ -192,10 +185,6 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
             ],
           ),
 
-          // =====================================
-          // OVERLAYS (Orientação e Escala)
-          // =====================================
-          
           // Bússola (Orientação ao Polo Norte)
           Positioned(
             top: 20,
@@ -242,7 +231,6 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // O texto estático foi trocado pela variável calculada dinamicamente
                   Text(_textoEscala, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 ],
               ),
@@ -251,7 +239,6 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
         ],
       ),
       
-      // Botão para avançar para a Tela 4
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
         color: Colors.white,

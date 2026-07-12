@@ -3,10 +3,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../polygon/poligono_view_screen.dart';
+import '../../../core/models/terreno_model.dart';
 
 class ColetaMapaScreen extends StatefulWidget {
-  final String nomeProjeto;
-  const ColetaMapaScreen({super.key, required this.nomeProjeto});
+  final TerrenoModel terreno;
+  const ColetaMapaScreen({super.key, required this.terreno});
 
   @override
   State<ColetaMapaScreen> createState() => _ColetaMapaScreenState();
@@ -17,11 +18,11 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
   LatLng? _localizacaoAtual;
 
   double? _precisaoEmMetros = double.infinity; // variável para precisão do GPS
-  final double _precisaoMinimaAceitavel = 10.0; // Limite de 4 metros para permitir coleta
+  final double _precisaoMinimaAceitavel = 10.0; 
 
   final MapController _mapController = MapController();
   bool _carregandoMapa = true;
-  bool _isSatellite = false; // Controle do modo do mapa
+  bool _isSatellite = false;
   int? _pontoSelecionado;
 
   @override
@@ -71,7 +72,8 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
       if (mounted) {
         setState(() {
           _localizacaoAtual = LatLng(position.latitude, position.longitude);
-          _precisaoEmMetros = position.accuracy; // atualiza a precisão em tempo real
+          _precisaoEmMetros =
+              position.accuracy; // atualiza a precisão em tempo real
         });
       }
     });
@@ -95,12 +97,14 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool precisaoBoa = _precisaoEmMetros! <= _precisaoMinimaAceitavel; // Verifica se o sinal é confiável
+    bool precisaoBoa =
+        _precisaoEmMetros! <=
+        _precisaoMinimaAceitavel; // Verifica se o sinal é confiável
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Coleta de Pontos: ${widget.nomeProjeto}',
+          'Coleta de Pontos: ${widget.terreno.nomeProjeto}',
           style: const TextStyle(fontSize: 16),
         ),
       ),
@@ -122,6 +126,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                   options: MapOptions(
                     initialCenter: _localizacaoAtual!,
                     initialZoom: 18.0,
+                    maxZoom: 18,
                     onTap: (_, __) => setState(() => _pontoSelecionado = null),
                   ),
                   children: [
@@ -181,7 +186,9 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.black87,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
                                           'Ponto ${index + 1}',
@@ -226,24 +233,36 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                   top: 16,
                   left: 16,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: precisaoBoa ? Colors.green.shade700 : Colors.red.shade700,
+                      color: precisaoBoa
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 4),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          precisaoBoa ? Icons.satellite_alt : Icons.warning_amber_rounded,
+                          precisaoBoa
+                              ? Icons.satellite_alt
+                              : Icons.warning_amber_rounded,
                           color: Colors.white,
                           size: 18,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Precisão: ± ${_precisaoEmMetros?.toStringAsFixed(1)}m',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -314,7 +333,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                       backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: _localizacaoAtual == null 
+                    onPressed: _localizacaoAtual == null
                         ? null
                         : _coletarPontoAtual,
                   ),
@@ -326,6 +345,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                     onPressed: _pontosColetados.length < 3
                         ? null
                         : () {
+                            widget.terreno.pontos = _pontosColetados;
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -345,15 +365,14 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                 ],
               ),
 
-                if (_pontosColetados.length < 3) 
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      'Caminhe e colete pelo menos 3 pontos para fechar a área.',
-                      style: TextStyle(color: Colors.redAccent, fontSize: 12),
-                    ),
+              if (_pontosColetados.length < 3)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Caminhe e colete pelo menos 3 pontos para fechar a área.',
+                    style: TextStyle(color: Colors.redAccent, fontSize: 12),
                   ),
-
+                ),
             ],
           ),
         ),
