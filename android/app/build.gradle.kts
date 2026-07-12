@@ -7,7 +7,10 @@ plugins {
 android {
     namespace = "com.example.fastmap_mobile"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    
+    // Atualize com os valores abaixo exigidos pelos plugins:
+    ndkVersion = "28.2.13676358"
+    ndkPath = "${android.sdkDirectory.absolutePath}/ndk/28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
