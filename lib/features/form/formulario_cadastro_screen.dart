@@ -127,7 +127,8 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const FormularioLoginScreen()),
+                      MaterialPageRoute(builder: (context) => const FormularioLoginScreen()
+                      ),
                     );
                   },
                   child: Text('Já tenho uma conta. Entrar.', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
