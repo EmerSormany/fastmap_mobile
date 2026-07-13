@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-// Importamos a tela 2 para poder navegar até ela
 import '../map/coleta_mapa_screen.dart';
 import '../../../core/models/terreno_model.dart';
 
 class FormularioTerrenoScreen extends StatefulWidget {
-  const FormularioTerrenoScreen({super.key});
+  final TerrenoModel? editandoProjeto;
+
+  const FormularioTerrenoScreen({super.key, this.editandoProjeto});
 
   @override
   State<FormularioTerrenoScreen> createState() =>
@@ -19,13 +20,17 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
   String cidade = '';
   String uf = '';
   String bairro = '';
+  String numero = '';
+  String telefone = '';
 
   @override
   Widget build(BuildContext context) {
+    final estaEditando = widget.editandoProjeto != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Novo Projeto',
+        title: Text(
+          estaEditando ? 'Editar Projeto' : 'Novo Projeto',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -48,12 +53,15 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
               const SizedBox(height: 32),
 
               TextFormField(
+                initialValue: widget.editandoProjeto?.nomeProjeto ?? '',
                 textCapitalization: TextCapitalization.words,
+
                 decoration: const InputDecoration(
                   labelText: 'Nome do Projeto',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.folder),
                 ),
+
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
                 onSaved: (value) => nomeProjeto = value!,
@@ -61,15 +69,33 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
               const SizedBox(height: 16),
 
               TextFormField(
+                initialValue: widget.editandoProjeto?.proprietario ?? '',
                 textCapitalization: TextCapitalization.words,
+
                 decoration: const InputDecoration(
                   labelText: 'Proprietário',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
+
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
                 onSaved: (value) => proprietario = value!,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                initialValue: widget.editandoProjeto?.telefone ?? '',
+                keyboardType: TextInputType.phone,
+
+                decoration: const InputDecoration(
+                  labelText: 'Telefone / WhatsApp', 
+                  border: OutlineInputBorder(), 
+                  prefixIcon: Icon(Icons.phone)
+                ),
+
+                validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
+                onSaved: (value) => telefone = value!,
               ),
               const SizedBox(height: 16),
 
@@ -79,7 +105,9 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                   Expanded(
                     flex: 2,
                     child: TextFormField(
+                      initialValue: widget.editandoProjeto?.cidade ?? '',
                       textCapitalization: TextCapitalization.words,
+
                       decoration: const InputDecoration(
                         labelText: 'Cidade',
                         border: OutlineInputBorder(),
@@ -95,14 +123,18 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                   Expanded(
                     flex: 1,
                     child: TextFormField(
+                      initialValue: widget.editandoProjeto?.uf ?? '',
                       textCapitalization: TextCapitalization.characters,
+
                       decoration: const InputDecoration(
                         labelText: 'UF',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.map),
                       ),
-                      validator: (value) =>
-                          value!.isEmpty || value.length > 2 ? 'Sigla do estado' : null,
+
+                      validator: (value) => value!.isEmpty || value.length != 2 // força usuário a digitar sigla
+                          ? 'Sigla do estado'
+                          : null,
                       onSaved: (value) => uf = value!.toLowerCase(),
                     ),
                   ),
@@ -110,23 +142,45 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
               ),
               const SizedBox(height: 16),
 
-              TextFormField(
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Bairro ou Bairro Rural (Sítio)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.landscape),
-                ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
-                onSaved: (value) => bairro = value!,
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      initialValue: widget.editandoProjeto?.bairro ?? '',
+                      textCapitalization: TextCapitalization.words,
+
+                      decoration: const InputDecoration(
+                        labelText: 'Bairro ou Bairro Rural (Sítio)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.landscape),
+                      ),
+
+                      validator: (value) =>
+                          value!.isEmpty ? 'Campo obrigatório' : null,
+                      onSaved: (value) => bairro = value!,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  Expanded(
+                    flex: 1,
+                    child: TextFormField(
+                      initialValue: widget.editandoProjeto?.numero ?? '',
+                      decoration: const InputDecoration(labelText: 'Número', border: OutlineInputBorder()),
+                      onSaved: (value) => numero = value ?? '',
+                    ),
+                  )
+                ],
               ),
 
               const SizedBox(height: 32),
 
               ElevatedButton.icon(
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('INICIAR MAPEAMENTO'),
+                label: Text(
+                  estaEditando ? 'SALVAR E CONTINUAR' : 'INICIAR MAPEAMENTO',
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Theme.of(context).colorScheme.primary,
@@ -136,13 +190,16 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
 
-                    // Epacotamento das 5 variáveis inciais do terreno
+                    // Epacotamento das variáveis inciais do terreno
                     TerrenoModel novoTerreno = TerrenoModel(
+                      id: widget.editandoProjeto?.id,
                       nomeProjeto: nomeProjeto,
                       proprietario: proprietario,
                       cidade: cidade,
                       uf: uf,
                       bairro: bairro,
+                      numero: numero,
+                      telefone: telefone
                     );
 
                     // Enia o terreno para a próxima página e icrementa com os pontos coletados

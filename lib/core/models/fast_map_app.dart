@@ -1,3 +1,4 @@
+import 'package:fastmap_mobile/features/tela_inicial_screen.dart';
 import 'package:flutter/material.dart';
 import '../constants/environment.dart';
 import '../../features/form/formulario_cadastro_screen.dart';
@@ -23,7 +24,7 @@ class FastMapApp extends StatelessWidget {
       ),
       home: telaInicial == 'cadastro' 
           ? const CadastroTerrenoScreen() 
-          : const FormularioLoginScreen(), 
+          : const HomeScreen(), 
     );
   }
 }
