@@ -4,15 +4,60 @@ import 'package:latlong2/latlong.dart';
 import 'package:utm/utm.dart';
 import '../../../core/models/terreno_model.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DetalhesScreen extends StatelessWidget {
+class DetalhesScreen extends StatefulWidget {
   final TerrenoModel terreno; // Recebe o modelo completo em vez de apenas os pontos
 
   const DetalhesScreen({super.key, required this.terreno});
 
   @override
+  State<DetalhesScreen> createState() => _DetalhesScreenState();
+}
+
+class _DetalhesScreenState extends State<DetalhesScreen> {
+  bool _isSaving = false;
+
+  Future<void> _salvarProjeto() async {
+    setState(() => _isSaving = true);
+    
+    try {
+      final supabase = Supabase.instance.client;
+      
+      // Verifica se o ID existe (se existir, atualiza; se não, cria novo)
+      if (widget.terreno.id != null) {
+        await supabase
+            .from('projetos')
+            .update(widget.terreno.toMap())
+            .eq('id', widget.terreno.id!);
+      } else {
+        await supabase
+            .from('projetos')
+            .insert(widget.terreno.toMap());
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Projeto salvo com sucesso!'), backgroundColor: Colors.green),
+        );
+        // Volta direto para a HomeScreen limpando todo o histórico de navegação (Form, Mapas, etc)
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (e) {
+      debugPrint('Erro ao salvar projeto: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final pontos = terreno.pontos;
+    final pontos = widget.terreno.pontos;
     final distance = const Distance();
 
     // Converter todas as Lat/Lng para UTM
@@ -74,11 +119,14 @@ class DetalhesScreen extends StatelessWidget {
                       Text('DADOS DO PROJETO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ],
                   ),
+
                   const Divider(),
-                  _buildInfoRow('Projeto:', terreno.nomeProjeto),
-                  _buildInfoRow('Proprietário:', terreno.proprietario),
-                  _buildInfoRow('Localidade:', '${terreno.cidade} - ${terreno.uf}'),
-                  _buildInfoRow('Bairro/Sítio:', terreno.bairro),
+                  _buildInfoRow('Projeto:', widget.terreno.nomeProjeto),
+                  _buildInfoRow('Proprietário:', widget.terreno.proprietario),
+                  _buildInfoRow('Telefone:', widget.terreno.telefone),
+                  _buildInfoRow('Localidade:', '${widget.terreno.cidade} - ${widget.terreno.uf}'),
+                  _buildInfoRow('Bairro/Sítio:', widget.terreno.bairro),
+                  _buildInfoRow('Número:', widget.terreno.numero.isEmpty ? 'Sem número' : widget.terreno.numero),
                 ],
               ),
             ),
@@ -261,53 +309,62 @@ class DetalhesScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // assinatura do tecnoco
-          const SizedBox(height: 60),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Column(
-              children: [
-                Container(height: 1.5, color: Colors.black87),
-                const SizedBox(height: 8),
-                const Text(
-                  'Assinatura do Técnico Responsável',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const Text(
-                  'CREA/CAU: _______________________',
-                  style: TextStyle(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 40),
         ],
       ),
 
-      // botão de gerar pdf
+      // botões de gerar pdf e salvar no banco
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.picture_as_pdf),
-            label: const Text('GERAR CROQUI EM PDF', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              // TODO: Implementar a geração real do PDF nas próximas etapas
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Preparando geração do PDF... Em breve!'),
-                  backgroundColor: Colors.teal,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+              
+                  icon: _isSaving 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.cloud_upload),
+                  
+                  label: Text(_isSaving ? 'SALVANDO NO BANCO...' : 'SALVAR PROJETO', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+
+                  onPressed: _isSaving ? null : _salvarProjeto,
                 ),
-              );
-            },
+              ),
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('GERAR CROQUI EM PDF', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                  ),
+                  
+                  onPressed: () {
+                    // TODO: Implementar a geração real do PDF nas próximas etapas
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Preparando geração do PDF... Em breve!'),
+                        backgroundColor: Colors.teal,
+                      ),
+                    );
+                  },
+              ),
+              ),
+            ]
+             
           ),
         ),
       ),

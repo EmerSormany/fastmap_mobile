@@ -89,12 +89,13 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                 keyboardType: TextInputType.phone,
 
                 decoration: const InputDecoration(
-                  labelText: 'Telefone / WhatsApp', 
-                  border: OutlineInputBorder(), 
-                  prefixIcon: Icon(Icons.phone)
+                  labelText: 'Telefone / WhatsApp',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
                 ),
 
-                validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'Campo obrigatório' : null,
                 onSaved: (value) => telefone = value!,
               ),
               const SizedBox(height: 16),
@@ -132,7 +133,10 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                         prefixIcon: Icon(Icons.map),
                       ),
 
-                      validator: (value) => value!.isEmpty || value.length != 2 // força usuário a digitar sigla
+                      validator: (value) =>
+                          value!.isEmpty ||
+                              value.length !=
+                                  2 // força usuário a digitar sigla
                           ? 'Sigla do estado'
                           : null,
                       onSaved: (value) => uf = value!.toLowerCase(),
@@ -167,10 +171,13 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                     flex: 1,
                     child: TextFormField(
                       initialValue: widget.editandoProjeto?.numero ?? '',
-                      decoration: const InputDecoration(labelText: 'Número', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: 'Número',
+                        border: OutlineInputBorder(),
+                      ),
                       onSaved: (value) => numero = value ?? '',
                     ),
-                  )
+                  ),
                 ],
               ),
 
@@ -193,13 +200,13 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
                     // Epacotamento das variáveis inciais do terreno
                     TerrenoModel novoTerreno = TerrenoModel(
                       id: widget.editandoProjeto?.id,
-                      nomeProjeto: nomeProjeto,
-                      proprietario: proprietario,
-                      cidade: cidade,
-                      uf: uf,
-                      bairro: bairro,
-                      numero: numero,
-                      telefone: telefone
+                      nomeProjeto: nomeProjeto.trim(),
+                      proprietario: proprietario.trim(),
+                      cidade: cidade.trim(),
+                      uf: uf.trim().toUpperCase(),
+                      bairro: bairro.trim(),
+                      numero: numero.trim(),
+                      telefone: telefone.trim(),
                     );
 
                     // Enia o terreno para a próxima página e icrementa com os pontos coletados

@@ -6,7 +6,6 @@ import 'package:latlong2/latlong.dart';
 import 'dart:math' as math;
 
 class PoligonoViewScreen extends StatefulWidget {
-  // final List<LatLng> pontos;
   final TerrenoModel terreno;
 
   const PoligonoViewScreen({super.key, required this.terreno});
@@ -16,15 +15,14 @@ class PoligonoViewScreen extends StatefulWidget {
 }
 
 class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
-  bool _isSatellite = true; // Por padrão, vamos mostrar o satélite nesta tela
+  bool _isSatellite = true; 
   final Distance _distanceCalculator = const Distance();
   String _textoEscala = "Calculando...";
 
   // Função que converte o zoom do mapa em metros na vida real
   void _atualizarEscala(double lat, double zoom) {
     // 156543.03392 é a circunferência do Equador dividida pelo tamanho do bloco do mapa (256)
-    double metrosPorPixel =
-        156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
+    double metrosPorPixel = 156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
 
     double distanciaNaBarra = metrosPorPixel * 80.0;
 
@@ -121,6 +119,8 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
           ),
         ],
       ),
+
+
       body: Stack(
         children: [
           FlutterMap(
@@ -130,6 +130,7 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
                 padding: const EdgeInsets.all(60.0),
               ),
               maxZoom: 18,
+              
               onPositionChanged: (camera, hasGesture) {
                 _atualizarEscala(camera.center.latitude, camera.zoom);
               },

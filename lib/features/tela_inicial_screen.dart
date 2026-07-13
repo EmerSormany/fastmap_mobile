@@ -71,18 +71,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+      
       appBar: AppBar(
         title: const Text('Meus Projetos', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).colorScheme.primary,
+        
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _buscarProjetos, // Botão de atualizar manual
+          ),
+        
+          IconButton(
+            onPressed: () async => await Supabase.instance.client.auth.signOut(),
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Sair da conta'
           )
         ],
       ),
-      
+
       body: RefreshIndicator(
         onRefresh: _buscarProjetos,
         child: _isLoading

@@ -32,9 +32,18 @@ class TerrenoModel {
     List<String> enderecoPartes = enderecoCompleto.split(',');
 
     String cidade = enderecoPartes[0].trim();
-    String bairro = enderecoPartes[1].trim();
-    String uf = enderecoPartes[2].trim();
+    String uf = enderecoPartes[1].trim();
+    String bairro = enderecoPartes[2].trim();
     String numero = enderecoPartes[3].trim();
+
+    // Tratamento da lista de pontos
+    List<LatLng> pontosExtraidos = [];
+    if (map['pontos'] != null) {
+      final List<dynamic> pontosLista = map['pontos'];
+      pontosExtraidos = pontosLista
+          .map((p) => LatLng(p['lat'], p['lng']))
+          .toList();
+    }
 
     return TerrenoModel(
       id: map['id'].toString(),
@@ -45,25 +54,25 @@ class TerrenoModel {
       bairro: bairro,
       uf: uf,
       numero: numero,
-      // TODO: Posteriormente faremos o parse da coluna de pontos do banco
-      pontos: [],
+      pontos: pontosExtraidos,
     );
   }
 
   // transforma objeto flutter em dados supabase
   Map<String, dynamic> toMap() {
-
     String numFormatado = numero.trim().isEmpty ? 'sem número' : numero.trim();
 
-    String enderecoUnificado = '${cidade.trim()}, ${uf.trim()}, ${bairro.trim()}, $numFormatado';
+    String enderecoUnificado =
+        '${cidade.trim()}, ${uf.trim()}, ${bairro.trim()}, $numFormatado';
 
     return {
       'nome_projeto': nomeProjeto,
       'proprietario': proprietario,
       'endereco': enderecoUnificado,
-      'telefone': telefone
-      // TODO: implementar tabela de pontos
-      // 'pontos': pontos.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
+      'telefone': telefone,
+      'pontos': pontos
+          .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+          .toList(), // trasnforma lista flutter em array de com
     };
   }
 }

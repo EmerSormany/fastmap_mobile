@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../formulario_terreno_screen.dart';
 
 class LoginController {
   final SupabaseClient _client = Supabase.instance.client;
@@ -29,13 +28,6 @@ class LoginController {
           Colors.green.shade700,
         );
 
-        // Direciona para a tela de Novo Projeto do seu grupo
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const FormularioTerrenoScreen(),
-          ),
-        );
       }
     } on AuthException catch (e) {
       if (context.mounted) Navigator.pop(context); // Fecha o loading
