@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:utm/utm.dart';
 
+// classe auxiliar que desenha o croqui
 class CroquiPainter extends CustomPainter {
   final List<UtmCoordinate> utmPoints;
 
@@ -10,7 +11,7 @@ class CroquiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (utmPoints.isEmpty) return;
 
-    // 1. Encontrar a Bounding Box (Limites X e Y extremos em metros reais)
+    // Encontrar a Bounding Box (Limites X e Y extremos em metros reais)
     double minX = utmPoints.first.easting;
     double maxX = utmPoints.first.easting;
     double minY = utmPoints.first.northing;
@@ -28,21 +29,19 @@ class CroquiPainter extends CustomPainter {
     if (widthReais == 0) widthReais = 1;
     if (heightReais == 0) heightReais = 1;
 
-    // 2. Calcular a Escala Dinâmica para caber no Canvas perfeitamente
-    double padding = 30.0; // Margem de segurança
+    // Calcular a Escala Dinâmica para caber no Canvas perfeitamente
+    double padding = 30.0;
     double scaleX = (size.width - padding * 2) / widthReais;
     double scaleY = (size.height - padding * 2) / heightReais;
-    double scale = scaleX < scaleY ? scaleX : scaleY; // Pega a menor escala para não distorcer o polígono
+    double scale = scaleX < scaleY ? scaleX : scaleY; 
 
     double offsetX = (size.width - (widthReais * scale)) / 2;
     double offsetY = (size.height - (heightReais * scale)) / 2;
 
-    // 3. Desenhar o Polígono
+    // Desenhar o Polígono
     final path = Path();
     for (int i = 0; i < utmPoints.length; i++) {
       double px = offsetX + ((utmPoints[i].easting - minX) * scale);
-      // O Eixo Y na tela do Flutter cresce para baixo, mas no mundo real o Norte (Y UTM) cresce para cima.
-      // Por isso subtraímos da altura do Canvas para espelhar perfeitamente para cima.
       double py = size.height - offsetY - ((utmPoints[i].northing - minY) * scale);
       
       if (i == 0) path.moveTo(px, py);
@@ -56,7 +55,7 @@ class CroquiPainter extends CustomPainter {
       ..strokeWidth = 2.0;
     canvas.drawPath(path, paintLinha);
 
-    // 4. Desenhar os Pontos Vermelhos e Nomes (P1, P2...)
+    // Desenhar os Pontos Vermelhos e Nomes (P1, P2...)
     final paintPonto = Paint()..color = Colors.red..style = PaintingStyle.fill;
     for (int i = 0; i < utmPoints.length; i++) {
       double px = offsetX + ((utmPoints[i].easting - minX) * scale);
@@ -71,12 +70,12 @@ class CroquiPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(px + 6, py - 6));
     }
 
-    // 5. Bússola (Norte Verdadeiro Sempre Apontando para Cima)
+    // Bússola (Norte Verdadeiro Sempre Apontando para Cima)
     final paintSeta = Paint()..color = Colors.red..strokeWidth = 2..style = PaintingStyle.stroke;
     double bx = size.width - 20;
     double by = 25;
     
-    // Letra N
+    // Letra N de orientação
     final textN = TextPainter(
       text: const TextSpan(text: 'N', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14)),
       textDirection: TextDirection.ltr,
@@ -89,15 +88,15 @@ class CroquiPainter extends CustomPainter {
     canvas.drawLine(Offset(bx, by), Offset(bx - 4, by + 5), paintSeta);
     canvas.drawLine(Offset(bx, by), Offset(bx + 4, by + 5), paintSeta);
 
-    // 6. Escala Gráfica Dinâmica
+    // Escala Gráfica Dinâmica
     double barraPixels = 60.0; // Tamanho visual fixo da régua
     double metrosReais = barraPixels / scale; // Quantos metros cabem nesses 60 pixels
     
     double ex = 10;
     double ey = size.height - 15;
-    canvas.drawLine(Offset(ex, ey), Offset(ex + barraPixels, ey), paintLinha); // Linha horizontal
-    canvas.drawLine(Offset(ex, ey - 3), Offset(ex, ey + 3), paintLinha); // Pino esquerdo
-    canvas.drawLine(Offset(ex + barraPixels, ey - 3), Offset(ex + barraPixels, ey + 3), paintLinha); // Pino direito
+    canvas.drawLine(Offset(ex, ey), Offset(ex + barraPixels, ey), paintLinha); 
+    canvas.drawLine(Offset(ex, ey - 3), Offset(ex, ey + 3), paintLinha); 
+    canvas.drawLine(Offset(ex + barraPixels, ey - 3), Offset(ex + barraPixels, ey + 3), paintLinha);
     
     final textEscala = TextPainter(
       text: TextSpan(text: '${metrosReais.toStringAsFixed(1)} m', style: const TextStyle(color: Colors.black, fontSize: 10)),
