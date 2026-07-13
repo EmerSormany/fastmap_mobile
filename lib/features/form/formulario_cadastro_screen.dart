@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/cpf_validator.dart';
 import 'controllers/cadastro_controller.dart';
 import 'widgets/cadastro_input_field.dart';
 import 'formulario_login_screen.dart';
@@ -15,10 +16,14 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
   final _controller = CadastroController();
 
   final _nomeController = TextEditingController();
+  final _cpfController = TextEditingController(); // NOVO
   final _emailController = TextEditingController();
+  final _confirmarEmailController = TextEditingController();
   final _senhaController = TextEditingController();
+  final _confirmarSenhaController = TextEditingController();
 
   bool _obscureText = true;
+  bool _obscureConfirmText = true;
 
   void _onCadastrarPressed() {
     if (_formKey.currentState!.validate()) {
@@ -27,6 +32,7 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
         nome: _nomeController.text,
         email: _emailController.text,
         senha: _senhaController.text,
+        cpf: _cpfController.text, // ADICIONADO
       );
     }
   }
@@ -34,8 +40,11 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
   @override
   void dispose() {
     _nomeController.dispose();
+    _cpfController.dispose(); // NOVO
     _emailController.dispose();
+    _confirmarEmailController.dispose();
     _senhaController.dispose();
+    _confirmarSenhaController.dispose();
     super.dispose();
   }
 
@@ -79,6 +88,16 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Campo: CPF (NOVO)
+                CadastroInputField(
+                  controller: _cpfController,
+                  label: 'CPF (Apenas números)',
+                  prefixIcon: Icons.badge_outlined,
+                  keyboardType: TextInputType.number,
+                  validator: CpfValidator.validar, // CHAMA O VALIDADOR NATIVO
+                ),
+                const SizedBox(height: 16),
+
                 // Campo: E-mail
                 CadastroInputField(
                   controller: _emailController,
@@ -88,6 +107,22 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return 'Por favor, insira seu e-mail';
                     if (!value.contains('@') || !value.contains('.')) return 'Insira um formato de e-mail válido';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Campo: Confirmar E-mail
+                CadastroInputField(
+                  controller: _confirmarEmailController,
+                  label: 'Confirmar E-mail',
+                  prefixIcon: Icons.mark_email_read_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'Por favor, confirme seu e-mail';
+                    if (value.trim() != _emailController.text.trim()) {
+                      return 'Os e-mails informados não são iguais';
+                    }
                     return null;
                   },
                 ),
@@ -109,6 +144,26 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
+
+                // Campo: Confirmar Senha
+                CadastroInputField(
+                  controller: _confirmarSenhaController,
+                  label: 'Confirmar Senha',
+                  prefixIcon: Icons.lock_reset_outlined,
+                  obscureText: _obscureConfirmText,
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscureConfirmText ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscureConfirmText = !_obscureConfirmText),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Por favor, confirme sua senha';
+                    if (value != _senhaController.text) {
+                      return 'As senhas informadas não são iguais';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 40),
 
                 ElevatedButton.icon(
@@ -127,8 +182,7 @@ class _CadastroTerrenoScreenState extends State<CadastroTerrenoScreen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const FormularioLoginScreen()
-                      ),
+                      MaterialPageRoute(builder: (context) => const FormularioLoginScreen()),
                     );
                   },
                   child: Text('Já tenho uma conta. Entrar.', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
