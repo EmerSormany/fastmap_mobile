@@ -1,7 +1,9 @@
+import 'package:fastmap_mobile/core/utils/croqui_pintos.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:utm/utm.dart';
 import '../../../core/models/terreno_model.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 class DetalhesScreen extends StatelessWidget {
   final TerrenoModel terreno; // Recebe o modelo completo em vez de apenas os pontos
@@ -13,15 +15,14 @@ class DetalhesScreen extends StatelessWidget {
     final pontos = terreno.pontos;
     final distance = const Distance();
 
-    // 1. Converter todas as Lat/Lng para UTM
+    // Converter todas as Lat/Lng para UTM
     final utmPoints = pontos.map((p) => UTM.fromLatLon(lat: p.latitude, lon: p.longitude)).toList();
 
-    // 2. Calcular Área Exata 
+    // Calcular Área Exata 
     double area = 0;
     if (utmPoints.length >= 3) {
       for (int i = 0; i < utmPoints.length; i++) {
         int next = (i + 1) % utmPoints.length;
-        // UTM Easting = X | UTM Northing = Y
         area += (utmPoints[i].easting * utmPoints[next].northing) -
                 (utmPoints[next].easting * utmPoints[i].northing);
       }
@@ -29,13 +30,12 @@ class DetalhesScreen extends StatelessWidget {
     }
     double hectares = area / 10000;
 
-    // 3. Calcular Distâncias dos Segmentos e o Perímetro
+    // Calcular Distâncias dos Segmentos e o Perímetro
     double perimetro = 0;
     List<Widget> listaSegmentos = [];
     
     for (int i = 0; i < pontos.length; i++) {
       int next = (i + 1) % pontos.length;
-      // Calcula a distância real na superfície da terra entre dois pontos
       double dist = distance.distance(pontos[i], pontos[next]);
       perimetro += dist;
 
@@ -93,7 +93,7 @@ class DetalhesScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text('MEMORIAL DESCRITIVO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal)),
+                  const Text('MEMORIAL DESCRITIVO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const Divider(),
                   ListTile(
                     dense: true,
@@ -177,6 +177,90 @@ class DetalhesScreen extends StatelessWidget {
               ),
             );
           }),
+
+          // polígono do terreno (croqui)
+          Card(
+            color: Colors.white,
+            elevation: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  const Text('CROQUI DO TERRENO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Divider(),
+                  SizedBox(
+                    height: 250,
+                    width: double.infinity,
+                    // Pintor Matemático que usa o UTM para desenho perfeitamente proporcional
+                    child: CustomPaint(
+                      painter: CroquiPainter(utmPoints: utmPoints),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // mapa estático para ser impresso no documento pdf
+          Card(
+            color: Colors.white,
+            elevation: 3,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('MAPA DE LOCALIZAÇÃO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+                const Divider(height: 1),
+                SizedBox(
+                  height: 250,
+                  // IgnorePointer bloqueia o toque para agir como uma imagem impressa (print)
+                  child: IgnorePointer(
+                    child: FlutterMap(
+                      options: MapOptions(
+                        maxZoom: 18,
+                        // O CameraFit.bounds garante que o mapa foque perfeitamente nos pontos simulando o zoom ideal
+                        initialCameraFit: CameraFit.bounds(
+                          bounds: LatLngBounds.fromPoints(pontos),
+                          padding: const EdgeInsets.all(40.0),
+                        ),
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                          userAgentPackageName: 'com.fastmap.mobile',
+                        ),
+                        PolygonLayer(
+                          polygons: [
+                            Polygon(
+                              points: pontos,
+                              color: Colors.teal.withOpacity(0.3),
+                              borderColor: Colors.teal,
+                              borderStrokeWidth: 3.0,
+                            ),
+                          ],
+                        ),
+                        MarkerLayer(
+                          markers: pontos.asMap().entries.map((entry) {
+                            return Marker(
+                              point: entry.value,
+                              width: 30,
+                              height: 30,
+                              alignment: Alignment.topCenter,
+                              child: const Icon(Icons.location_on, color: Colors.red, size: 30),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // assinatura do tecnoco
           const SizedBox(height: 60),
