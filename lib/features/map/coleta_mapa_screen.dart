@@ -350,7 +350,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PoligonoViewScreen(
-                                  pontos: _pontosColetados,
+                                  terreno: widget.terreno,
                                 ),
                               ),
                             );
@@ -365,7 +365,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                 ],
               ),
 
-              if (_pontosColetados.length < 3)
+              if (widget.terreno.pontos.length < 3)
                 const Padding(
                   padding: EdgeInsets.only(top: 8.0),
                   child: Text(

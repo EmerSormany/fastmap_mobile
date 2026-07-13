@@ -1,14 +1,15 @@
+import 'package:fastmap_mobile/core/models/terreno_model.dart';
+import 'package:fastmap_mobile/features/report/detalhes_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-// O import da Tela 4 está comentado para não dar erro até criarmos ela
-// import '../../report/screens/detalhes_screen.dart';
 import 'dart:math' as math;
 
 class PoligonoViewScreen extends StatefulWidget {
-  final List<LatLng> pontos;
-  
-  const PoligonoViewScreen({super.key, required this.pontos});
+  // final List<LatLng> pontos;
+  final TerrenoModel terreno;
+
+  const PoligonoViewScreen({super.key, required this.terreno});
 
   @override
   State<PoligonoViewScreen> createState() => _PoligonoViewScreenState();
@@ -22,10 +23,11 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
   // Função que converte o zoom do mapa em metros na vida real
   void _atualizarEscala(double lat, double zoom) {
     // 156543.03392 é a circunferência do Equador dividida pelo tamanho do bloco do mapa (256)
-    double metrosPorPixel = 156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
-    
-    double distanciaNaBarra = metrosPorPixel * 80.0; 
-    
+    double metrosPorPixel =
+        156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
+
+    double distanciaNaBarra = metrosPorPixel * 80.0;
+
     String texto;
     if (distanciaNaBarra >= 1000) {
       texto = '${(distanciaNaBarra / 1000).toStringAsFixed(2)} km';
@@ -56,14 +58,14 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
   // Gera os marcadores das distâncias de cada lado do terreno
   List<Marker> _gerarMarcadoresDeSegmento() {
     List<Marker> marcadores = [];
-    
-    if (widget.pontos.length < 3) return marcadores;
 
-    for (int i = 0; i < widget.pontos.length; i++) {
+    if (widget.terreno.pontos.length < 3) return marcadores;
+
+    for (int i = 0; i < widget.terreno.pontos.length; i++) {
       // Pega o ponto atual e o próximo (se for o último, liga com o primeiro para fechar o polígono)
-      int nextIndex = (i + 1) % widget.pontos.length;
-      LatLng p1 = widget.pontos[i];
-      LatLng p2 = widget.pontos[nextIndex];
+      int nextIndex = (i + 1) % widget.terreno.pontos.length;
+      LatLng p1 = widget.terreno.pontos[i];
+      LatLng p2 = widget.terreno.pontos[nextIndex];
 
       LatLng pontoMedio = _calcularPontoMedio(p1, p2);
       double distanciaMetros = _distanceCalculator.as(LengthUnit.Meter, p1, p2);
@@ -83,7 +85,11 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
             child: Center(
               child: Text(
                 '${distanciaMetros.toStringAsFixed(1)} m',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.teal),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.teal,
+                ),
               ),
             ),
           ),
@@ -97,7 +103,10 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Processamento do Terreno', style: TextStyle(fontSize: 18)),
+        title: const Text(
+          'Processamento do Terreno',
+          style: TextStyle(fontSize: 18),
+        ),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         actions: [
@@ -114,12 +123,11 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
       ),
       body: Stack(
         children: [
-
           FlutterMap(
             options: MapOptions(
               initialCameraFit: CameraFit.bounds(
-                bounds: LatLngBounds.fromPoints(widget.pontos),
-                padding: const EdgeInsets.all(60.0), 
+                bounds: LatLngBounds.fromPoints(widget.terreno.pontos),
+                padding: const EdgeInsets.all(60.0),
               ),
               maxZoom: 18,
               onPositionChanged: (camera, hasGesture) {
@@ -127,22 +135,22 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
               },
               interactionOptions: const InteractionOptions(
                 // garante que o Norte fique sempre para cima
-                flags: InteractiveFlag.all & ~InteractiveFlag.rotate, 
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
               ),
             ),
             children: [
               TileLayer(
-                urlTemplate: _isSatellite  
+                urlTemplate: _isSatellite
                     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
                     : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.fastmap.mobile',
               ),
-              
+
               // O Polígono Preenchido
               PolygonLayer(
                 polygons: [
                   Polygon(
-                    points: widget.pontos,
+                    points: widget.terreno.pontos,
                     color: Colors.teal.withOpacity(0.2),
                     borderColor: Colors.tealAccent,
                     borderStrokeWidth: 4.0,
@@ -157,7 +165,7 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
                   ..._gerarMarcadoresDeSegmento(),
 
                   // 2. As bolinhas indicando cada vértice com seu número
-                  ...widget.pontos.asMap().entries.map((entry) {
+                  ...widget.terreno.pontos.asMap().entries.map((entry) {
                     int index = entry.key;
                     LatLng ponto = entry.value;
                     return Marker(
@@ -174,7 +182,11 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
                         child: Center(
                           child: Text(
                             'P${index + 1}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -194,12 +206,21 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.85),
                 shape: BoxShape.circle,
-                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 4),
+                ],
               ),
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('N', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16)),
+                  Text(
+                    'N',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                      fontSize: 16,
+                    ),
+                  ),
                   Icon(Icons.arrow_upward, size: 24, color: Colors.black87),
                 ],
               ),
@@ -215,30 +236,51 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 4),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Projeção Base:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  const Text('UTM / WGS 84', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Projeção Base:',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const Text(
+                    'UTM / WGS 84',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Container(width: 40, height: 4, color: Colors.black87),
-                      Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white, border: Border.all(color: Colors.black87, width: 1))),
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.black87, width: 1),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(_textoEscala, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(
+                    _textoEscala,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
-      
+
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
         color: Colors.white,
@@ -250,16 +292,18 @@ class _PoligonoViewScreenState extends State<PoligonoViewScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.orange.shade700,
               foregroundColor: Colors.white,
-              textStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
             ),
             onPressed: () {
-              // TODO: Descomentar quando a Tela 4 estiver pronta
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => DetalhesScreen(pontos: widget.pontos),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetalhesScreen(terreno: widget.terreno),
+                ),
+              );
             },
           ),
         ),
