@@ -133,7 +133,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                     initialCenter: _localizacaoAtual!,
                     initialZoom: 18.0,
                     maxZoom: 18,
-                    onTap: (_, __) => setState(() => _pontoSelecionado = null),
+                    onTap: (_, _) => setState(() => _pontoSelecionado = null),
                   ),
                   children: [
                     TileLayer(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'controllers/login_controller.dart';
-import 'formulario_cadastro_screen.dart'; // Importa a tela do seu colega
+import 'formulario_cadastro_screen.dart'; // Importa tela cadastro
 
 class FormularioLoginScreen extends StatefulWidget {
   const FormularioLoginScreen({super.key});
@@ -137,7 +137,7 @@ class _FormularioLoginScreenState extends State<FormularioLoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Botão para ir para a tela de Cadastro do seu amigo
+                // Botão para ir para a tela de Cadastro
                 TextButton(
                   onPressed: () {
                     Navigator.pushReplacement(
