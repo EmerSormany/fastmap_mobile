@@ -1,10 +1,10 @@
-FastMap Mobile
+# FastMap Mobile
 
-1. Visão Geral
+### 1. Visão Geral
 
 O FastMap Mobile é um aplicativo voltado para a área de engenharia, topografia e agronegócio. Seu objetivo principal é permitir que profissionais realizem o levantamento perimetral de terrenos, sítios e fazendas utilizando apenas o smartphone. O aplicativo calcula automaticamente a área (em metros quadrados e hectares), o perímetro, realiza a conversão de coordenadas geográficas para UTM e gera um relatório técnico (croqui) em formato PDF.
 
-2. Tecnologias e Arquitetura
+### 2. Tecnologias e Arquitetura
 
 Framework Frontend: Flutter / Dart
 
@@ -22,15 +22,15 @@ pdf e printing: Geração nativa e compartilhamento de relatórios em PDF.
 
 supabase_flutter: Comunicação direta e reativa com o banco de dados em nuvem.
 
-3. Funcionalidades Principais
+### 3. Funcionalidades Principais
 
-3.1. Autenticação e Sessão Reativa
+#### 3.1. Autenticação e Sessão Reativa
 
 O acesso ao aplicativo é restrito a usuários cadastrados.
 
 Utiliza um AuthGate (Portão de Autenticação) que escuta o estado da sessão no Supabase em tempo real. Se o token de acesso (JWT) estiver salvo de forma segura no dispositivo, o usuário é direcionado automaticamente à tela inicial, dispensando novos logins.
 
-3.2. Gestão de Projetos (CRUD)
+#### 3.2. Gestão de Projetos (CRUD)
 
 Meus Projetos (Home): Tela inicial que lista todos os levantamentos salvos na nuvem.
 
@@ -38,13 +38,13 @@ Permite criar novos projetos, visualizar os existentes, editá-los e excluí-los
 
 Sincronização em tempo real puxada (Pull-to-refresh) do banco de dados.
 
-3.3. Formulário de Dados do Terreno
+#### 3.3. Formulário de Dados do Terreno
 
 Coleta de dados essenciais para o relatório: Nome do projeto, Proprietário, Telefone, Cidade, UF, Bairro e Número.
 
 A lógica de salvamento ("Atualizar Dados") foi separada da lógica de mapeamento, permitindo que o usuário altere apenas erros de digitação sem perder as coordenadas já coletadas.
 
-3.4. Coleta Geoespacial no Mapa
+#### 3.4. Coleta Geoespacial no Mapa
 
 Tela interativa que exibe a imagem de satélite da região.
 
@@ -52,7 +52,7 @@ Permite a marcação de vértices (pontos) que formam o polígono do terreno.
 
 Retenção de estado: Ao editar um projeto, os vértices coletados anteriormente são automaticamente desenhados no mapa para continuação ou correção do trabalho.
 
-3.5. Cálculos de Engenharia e Conversão
+#### 3.5. Cálculos de Engenharia e Conversão
 
 Conversão UTM: O sistema converte cada ponto Latitude/Longitude capturado pelo GPS para coordenadas UTM (Easting/Northing).
 
@@ -60,7 +60,7 @@ Cálculo de Área Real: Utiliza a Fórmula de Shoelace (Área de Gauss) nos eixo
 
 Cálculo de Distâncias: Calcula a distância geodésica exata entre cada vértice para compor o perímetro.
 
-3.6. Geração de Relatório e Croqui (PDF)
+#### 3.6. Geração de Relatório e Croqui (PDF)
 
 Captura silenciosa (RepaintBoundary) do mapa de satélite e do croqui geométrico.
 
@@ -68,11 +68,11 @@ Desenho matemático escalonado do croqui, incluindo bússola (Norte Verdadeiro) 
 
 Consolidação de todos os dados em um documento A4 profissional, pronto para ser impresso ou compartilhado via WhatsApp/E-mail nativamente.
 
-4. Acesso ao Hardware de GPS e Precisão
+### 4. Acesso ao Hardware de GPS e Precisão
 
 Uma das características mais críticas do FastMap Mobile é a sua dependência dos dados de localização do dispositivo. Compreender como essa comunicação ocorre é essencial para a operação técnica.
 
-4.1. Como a Aplicação Acessa o Hardware
+#### 4.1. Como a Aplicação Acessa o Hardware
 
 O Flutter, por ser um framework multiplataforma, não conversa diretamente com as antenas de hardware do celular. Ele utiliza uma arquitetura de "ponte" chamada Platform Channels para solicitar que o sistema operacional faça esse trabalho pesado.
 
@@ -100,7 +100,7 @@ Sensores de Movimento: Acelerômetro e giroscópio ajudam o OS a saber se o usu�
 
 O Retorno Contínuo (Event Sink): O sistema operacional compila todos esses cálculos em um único pacote de dados e o envia de volta pela ponte (EventChannel) para o Flutter em formato de Stream (um fluxo contínuo). O Flutter recebe, decodifica e converte isso em um objeto de localização que contém a Latitude (Y), Longitude (X), Altitude (Z) e o Raio de Precisão Estimado em metros.
 
-4.2. Precisão e Acurácia (Limitações do Hardware Mobile)
+#### 4.2. Precisão e Acurácia (Limitações do Hardware Mobile)
 
 É fundamental que os usuários do FastMap Mobile entendam a diferença entre um equipamento topográfico profissional (RTK) e um smartphone:
 
@@ -116,7 +116,7 @@ Céu Fechado (Nebulosidade): Nuvens muito densas ou chuvas fortes degradam a for
 
 Aquecimento do Chip: A coleta contínua sob o sol esquenta o dispositivo, o que pode causar thermal throttling e reduzir o desempenho da fusão de sensores do Android.
 
-4.3. Boas Práticas para o Usuário
+#### 4.3. Boas Práticas para o Usuário
 
 Para garantir a melhor precisão possível no cálculo da área via FastMap:
 
@@ -126,7 +126,7 @@ Evitar marcar pontos enquanto estiver em movimento rápido ou com o celular no b
 
 Realizar coletas preferencialmente em áreas de "céu aberto" para que o celular tenha linha de visada com pelo menos 4 satélites (mínimo necessário para triangular a posição em 3D).
 
-5. Fluxo de Dados (Cloud / Supabase)
+### 5. Fluxo de Dados (Cloud / Supabase)
 
 A estrutura de banco de dados foi modelada para ser leve e trafegar facilmente via redes móveis 3G/4G instáveis em áreas rurais:
 
