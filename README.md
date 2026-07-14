@@ -14,6 +14,8 @@ Arquitetura: Baseada em componentes reativos com separação de responsabilidade
 
 Bibliotecas Principais:
 
+Geolocator: comunicação com os dados de GPS do dispositivo.
+
 flutter_map e latlong2: Renderização de mapas e manipulação de coordenadas.
 
 utm: Conversão de coordenadas esféricas (WGS 84) para o plano cartesiano (Universal Transversa de Mercator).
