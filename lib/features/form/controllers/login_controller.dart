@@ -61,7 +61,7 @@ class LoginController {
       return 'Muitas tentativas seguidas. Aguarde um momento.';
     }
     
-    return 'Não foi possível fazer login agora. Tente novamente.';
+    return 'Erro Supabase: ${e.message}';
   }
 
   void _showLoading(BuildContext context) {
