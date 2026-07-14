@@ -1,5 +1,7 @@
 # FastMap Mobile
 
+Desenvolvido por Emerson Sormany, Rúdson Alisson e José Mamede
+
 ### 1. Visão Geral
 
 O FastMap Mobile é um aplicativo voltado para a área de engenharia, topografia e agronegócio. Seu objetivo principal é permitir que profissionais realizem o levantamento perimetral de terrenos, sítios e fazendas utilizando apenas o smartphone. O aplicativo calcula automaticamente a área (em metros quadrados e hectares), o perímetro, realiza a conversão de coordenadas geográficas para UTM e gera um relatório técnico (croqui) em formato PDF.
