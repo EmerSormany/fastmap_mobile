@@ -1,4 +1,4 @@
-# **Documento de Especificação de Projeto Prático (Exemplo)**
+# **Documento de Especificação de Projeto Prático**
 
 **Disciplina:** Programação para Dispositivos Móveis
 
