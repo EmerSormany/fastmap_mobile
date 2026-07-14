@@ -14,7 +14,7 @@ Backend as a Service (BaaS): Supabase (PostgreSQL, Autenticação, Storage)
 
 Arquitetura: Baseada em componentes reativos com separação de responsabilidades (Controllers para lógica de negócios e persistência, Views para interface de usuário).
 
-Bibliotecas Principais:
+**Bibliotecas Principais:**
 
 Geolocator: comunicação com os dados de GPS do dispositivo.
 
@@ -26,7 +26,7 @@ pdf e printing: Geração nativa e compartilhamento de relatórios em PDF.
 
 supabase_flutter: Comunicação direta e reativa com o banco de dados em nuvem.
 
-### 3. Funcionalidades Principais
+### 3. Telas
 
 #### 3.1. Autenticação e Sessão Reativa
 
@@ -46,7 +46,9 @@ Sincronização em tempo real puxada (Pull-to-refresh) do banco de dados.
 
 Coleta de dados essenciais para o relatório: Nome do projeto, Proprietário, Telefone, Cidade, UF, Bairro e Número.
 
-A lógica de salvamento ("Atualizar Dados") foi separada da lógica de mapeamento, permitindo que o usuário altere apenas erros de digitação sem perder as coordenadas já coletadas.
+Usada na criação e na edição do projeto de um terrno.
+
+Na edição dos dados de um terreno, a lógica de salvamento ("Atualizar Dados") ocorre separada da lógica de mapeamento.
 
 #### 3.4. Coleta Geoespacial no Mapa
 
@@ -78,7 +80,7 @@ Uma das características mais críticas do FastMap Mobile é a sua dependência 
 
 #### 4.1. Como a Aplicação Acessa o Hardware
 
-O Flutter, por ser um framework multiplataforma, não conversa diretamente com as antenas de hardware do celular. Ele utiliza uma arquitetura de "ponte" chamada Platform Channels para solicitar que o sistema operacional faça esse trabalho pesado.
+O Flutter, por ser um framework multiplataforma, não conversa diretamente com as antenas de hardware do celular. Ele utiliza uma arquitetura de "ponte" chamada Platform Channels (Geolocator) para solicitar que o sistema operacional faça esse trabalho pesado.
 
 O fluxo de comunicação detalhado ocorre nas seguintes etapas:
 
@@ -114,13 +116,13 @@ Smartphone Comercial: Utiliza antenas de frequência única (geralmente L1). A p
 
 Fatores que afetam a precisão da coleta no FastMap:
 
-Efeito Multipath (Multicaminho): Se o mapeamento ocorrer perto de construções altas, montanhas de pedra ou copas de árvores muito densas, o sinal do satélite "bate" no obstáculo antes de chegar ao celular, atrasando o tempo do sinal e gerando falsas distâncias (jogando o ponto metros para o lado).
+Efeito Multipath: Se o mapeamento ocorrer perto de construções altas, montanhas de pedra ou copas de árvores muito densas, o sinal do satélite "bate" no obstáculo antes de chegar ao celular, atrasando o tempo do sinal e gerando falsas distâncias (jogando o ponto metros para o lado).
 
-Céu Fechado (Nebulosidade): Nuvens muito densas ou chuvas fortes degradam a força do sinal.
+Céu Fechado: Nuvens muito densas ou chuvas fortes degradam a força do sinal.
 
 Aquecimento do Chip: A coleta contínua sob o sol esquenta o dispositivo, o que pode causar thermal throttling e reduzir o desempenho da fusão de sensores do Android.
 
-#### 4.3. Boas Práticas para o Usuário
+#### 4.3. Boas Práticas de Uso
 
 Para garantir a melhor precisão possível no cálculo da área via FastMap:
 
