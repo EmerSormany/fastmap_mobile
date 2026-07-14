@@ -18,12 +18,16 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
   LatLng? _localizacaoAtual;
 
   double? _precisaoEmMetros = double.infinity; // variável para precisão do GPS
-  final double _precisaoMinimaAceitavel = 10.0; 
+  final double _precisaoMinimaAceitavel = 10.0;
 
   final MapController _mapController = MapController();
   bool _carregandoMapa = true;
   bool _isSatellite = false;
   int? _pontoSelecionado;
+
+  void attPontos() {
+    _pontosColetados = widget.terreno.pontos;
+  }
 
   @override
   void initState() {
@@ -100,6 +104,8 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
     bool precisaoBoa =
         _precisaoEmMetros! <=
         _precisaoMinimaAceitavel; // Verifica se o sinal é confiável
+
+    attPontos();
 
     return Scaffold(
       appBar: AppBar(
@@ -285,7 +291,7 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                   ),
                 ),
 
-                // Botão de Satélite adicionado novamente
+                // Botão de Satélite
                 Positioned(
                   top: 70,
                   right: 16,
@@ -349,9 +355,8 @@ class _ColetaMapaScreenState extends State<ColetaMapaScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PoligonoViewScreen(
-                                  terreno: widget.terreno,
-                                ),
+                                builder: (context) =>
+                                    PoligonoViewScreen(terreno: widget.terreno),
                               ),
                             );
                             ScaffoldMessenger.of(context).showSnackBar(
