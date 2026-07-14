@@ -1,141 +1,64 @@
-# FastMap Mobile
+# **Documento de Especificação de Projeto Prático (Exemplo)**
 
-Desenvolvido por Emerson Sormany, Rúdson Alisson e José Mamede
+**Disciplina:** Programação para Dispositivos Móveis
 
-### 1. Visão Geral
+## **Identificação do Grupo (Máximo de 3 integrantes)**
 
-O FastMap Mobile é um aplicativo voltado para a área de engenharia, topografia e agronegócio. Seu objetivo principal é permitir que profissionais realizem o levantamento perimetral de terrenos, sítios e fazendas utilizando apenas o smartphone. O aplicativo calcula automaticamente a área (em metros quadrados e hectares), o perímetro, realiza a conversão de coordenadas geográficas para UTM e gera um relatório técnico (croqui) em formato PDF.
+* **Integrante 1:** José Mamede  
+* **Integrante 2:** Rúdson Alisson  
+* **Integrante 3:** Emerson Sormany
 
-### 2. Tecnologias e Arquitetura
+## **1\. Visão Geral do Projeto**
 
-Framework Frontend: Flutter / Dart
+O **FastMap Mobile**, um aplicativo autoral focado nas áreas de engenharia, topografia e agronegócio. O problema resolvido é a dependência de equipamentos topográficos caros e complexos para levantamentos preliminares e medições de rotina. O aplicativo transforma o smartphone em uma ferramenta capaz de capturar coordenadas geográficas em campo, realizar cálculos complexos de área e perímetro, e gerar relatórios técnicos profissionais de forma imediata.
 
-Backend as a Service (BaaS): Supabase (PostgreSQL, Autenticação, Storage)
+* **Nome do Aplicativo:** FastMap Mobile  
+* **Objetivo Geral:** Permitir que profissionais realizem o levantamento perimetral de terrenos de forma digital, capturando vértices via GPS, calculando métricas exatas em UTM, metros quadrados e hectares e emitindo croquis em PDF integrados à nuvem.
 
-Arquitetura: Baseada em componentes reativos com separação de responsabilidades (Controllers para lógica de negócios e persistência, Views para interface de usuário).
+## **2\. Requisitos de Funcionalidades (As Telas do Sistema)**
 
-**Bibliotecas Principais:**
+O aplicativo possui um fluxo de navegação protegido e estruturado em telas principais:
 
-Geolocator: comunicação com os dados de GPS do dispositivo.
+* **Tela 1: Autenticação e Painel de Projetos (Leitura em Nuvem)**
 
-flutter_map e latlong2: Renderização de mapas e manipulação de coordenadas.
+  * **Portão de Acesso (AuthGate):** A tela inicial gerencia a sessão de forma reativa. Usuários não logados veem o formulário de login; usuários logados acessam a Home automaticamente através da validação de token (JWT).
 
-utm: Conversão de coordenadas esféricas (WGS 84) para o plano cartesiano (Universal Transversa de Mercator).
+  * **Listagem de Dados:** Exibe os levantamentos previamente salvos no banco de dados (Supabase) em cartões visuais interativos.
 
-pdf e printing: Geração nativa e compartilhamento de relatórios em PDF.
+  * **Sincronização:** Possui funcionalidade de atualização (*pull-to-refresh*) para buscar os dados mais recentes na nuvem.
 
-supabase_flutter: Comunicação direta e reativa com o banco de dados em nuvem.
+* **Tela 2: Formulário de Dados do Terreno (Entrada de Dados)**
 
-### 3. Telas
+  * **Formulário Estruturado:** Coleta de dados descritivos essenciais como Nome do Projeto, Proprietário, Telefone, Cidade, UF, Bairro e Número.
 
-#### 3.1. Autenticação e Sessão Reativa
+  * **Validação de Dados e Regras de Negócio:** Garante o preenchimento dos campos obrigatórios. Implementa formatação inteligente para tratar campos em branco e formatação de strings consolidadas.
 
-O acesso ao aplicativo é restrito a usuários cadastrados.
+  * **Ação Dupla:** Permite que o usuário apenas *Atualize Dados*, salvando direto na nuvem, ou avance para *Editar Mapa* preservando a memória das coordenadas.
 
-Utiliza um AuthGate (Portão de Autenticação) que escuta o estado da sessão no Supabase em tempo real. Se o token de acesso (JWT) estiver salvo de forma segura no dispositivo, o usuário é direcionado automaticamente à tela inicial, dispensando novos logins.
+* **Tela 3: Coleta Geoespacial no Mapa (Integração de Hardware)**
 
-#### 3.2. Gestão de Projetos (CRUD)
+  * **Renderização Cartográfica:** Exibe um mapa com imagens de satélite interativas.
 
-Meus Projetos (Home): Tela inicial que lista todos os levantamentos salvos na nuvem.
+  * **Coleta de Vértices:** Acessa o hardware de GPS nativo do celular para registrar marcadores, que são pontos de latitude e longitude, formando a geometria do terreno.
 
-Permite criar novos projetos, visualizar os existentes, editá-los e excluí-los.
+  * **Retenção de Estado:** Ao abrir um projeto existente, os pontos renderizam as marcações e polígonos perfeitamente como foram deixados na última edição.
 
-Sincronização em tempo real puxada (Pull-to-refresh) do banco de dados.
+* **Tela 4: Croqui e Relatório Técnico (Processamento e Saída)**
 
-#### 3.3. Formulário de Dados do Terreno
+  * **Processamento Matemático:** Converte as coordenadas WGS 84 do GPS para o sistema plano cartesiano *UTM*. Aplica a *Fórmula de Shoelace* (Área de Gauss) para calcular com precisão a área e o perímetro.
 
-Coleta de dados essenciais para o relatório: Nome do projeto, Proprietário, Telefone, Cidade, UF, Bairro e Número.
+  * **Representação Gráfica:** Desenha o croqui escalonado do terreno, incluindo indicativos precisos de Norte Verdadeiro (invertendo eixos Y do Canvas) e escala gráfica em metros.
 
-Usada na criação e na edição do projeto de um terrno.
+  * **Persistência Final:** Botão para consolidar as edições e enviar o JSON final ao Supabase.
 
-Na edição dos dados de um terreno, a lógica de salvamento ("Atualizar Dados") ocorre separada da lógica de mapeamento.
+## **3\. Customizações e Melhorias Implementadas pelo Grupo**
 
-#### 3.4. Coleta Geoespacial no Mapa
+* **Tarefa 1: Gestão de Sessão Reativa (AuthGate)**   
+  Implementamos uma arquitetura de proteção de rotas ouvindo o *Stream* do *Supabase* em tempo real. O aplicativo detecta o token salvo no armazenamento seguro do dispositivo e redireciona os fluxos automaticamente sem depender de empilhamentos estáticos de tela, elevando a segurança e melhorando a UX.  
+* **Tarefa 2: Modelagem Otimizada de Banco de Dados**  
+  Para suportar o trabalho em áreas rurais com internet 3G/4G instável, otimizamos o tráfego de rede. Em vez de criar tabelas relacionais complexas para cada ponto do mapa, serializamos a lista inteira de coordenadas *List\<LatLng\>* em um único campo leve de matriz em campo do tipo *jsonb* diretamente na tabela do projeto.  
+* **Tarefa 3: Integração Nativa de Hardware via Platform Channels**   
+  O aplicativo não depende apenas de mocks. Configuramos as permissões nativas do Android usando *AndroidManifest.xml \- ACCESS\_FINE\_LOCATION*, *AndroidManifest.xml \- ACCESS\_COARSE\_LOCATION* para cruzar a ponte do Flutter até os serviços de "Fusão de Sensores" do aparelho, garantindo uma coleta mais exata das coordenadas *e AndroidManifest.xml \- INTERNET* para conseguir acessar internet.  
+* **Tarefa 4: Geração de Relatório Profissional em PDF com Captura de Tela**    
+  Adicionamos a biblioteca *pdf* e *printing*. Utilizamos a *RepaintBoundary* para tirar "prints" silenciosos da renderização do mapa e do croqui, embutindo as imagens geradas diretamente em um documento A4 vetorizado e formatado para ser exportado via WhatsApp ou E-mail ou baixado nativamente pelo sistema operacional.
 
-Tela interativa que exibe a imagem de satélite da região.
-
-Permite a marcação de vértices (pontos) que formam o polígono do terreno.
-
-Retenção de estado: Ao editar um projeto, os vértices coletados anteriormente são automaticamente desenhados no mapa para continuação ou correção do trabalho.
-
-#### 3.5. Cálculos de Engenharia e Conversão
-
-Conversão UTM: O sistema converte cada ponto Latitude/Longitude capturado pelo GPS para coordenadas UTM (Easting/Northing).
-
-Cálculo de Área Real: Utiliza a Fórmula de Shoelace (Área de Gauss) nos eixos X e Y do UTM para obter a área exata em metros quadrados planificados, mitigando a distorção da curvatura da Terra.
-
-Cálculo de Distâncias: Calcula a distância geodésica exata entre cada vértice para compor o perímetro.
-
-#### 3.6. Geração de Relatório e Croqui (PDF)
-
-Captura silenciosa (RepaintBoundary) do mapa de satélite e do croqui geométrico.
-
-Desenho matemático escalonado do croqui, incluindo bússola (Norte Verdadeiro) e escala gráfica dinâmica.
-
-Consolidação de todos os dados em um documento A4 profissional, pronto para ser impresso ou compartilhado via WhatsApp/E-mail nativamente.
-
-### 4. Acesso ao Hardware de GPS e Precisão
-
-Uma das características mais críticas do FastMap Mobile é a sua dependência dos dados de localização do dispositivo. Compreender como essa comunicação ocorre é essencial para a operação técnica.
-
-#### 4.1. Como a Aplicação Acessa o Hardware
-
-O Flutter, por ser um framework multiplataforma, não conversa diretamente com as antenas de hardware do celular. Ele utiliza uma arquitetura de "ponte" chamada Platform Channels (Geolocator) para solicitar que o sistema operacional faça esse trabalho pesado.
-
-O fluxo de comunicação detalhado ocorre nas seguintes etapas:
-
-Camada de Solicitação (Dart/Flutter): Quando o usuário entra na tela do mapa e solicita a coleta de um ponto, o código em Dart valida se a permissão de localização "Em Primeiro Plano" (Foreground) foi concedida. Em caso positivo, ele abre um EventChannel de comunicação.
-
-A Ponte (Platform Channels): O pedido "cruza a ponte" saindo do ambiente Dart (Isolate) e entrando no código nativo do dispositivo. A comunicação é serializada e enviada para o host nativo:
-
-No Android: O código em Kotlin/Java recebe o pedido.
-
-Invocação das APIs Nativas (Processamento do OS):
-
-No Android, o FastMap aciona a API FusedLocationProviderClient (parte do Google Play Services).
-
-Neste momento, o sistema operacional liga fisicamente os sensores do dispositivo.
-
-Fusão de Sensores (Fused Location): O sistema operacional não confia apenas na antena GNSS (GPS). Para entregar uma coordenada rápida e otimizar a bateria, ele cruza os dados ativamente de três fontes (Fusão de Sensores):
-
-Redes Wi-Fi e Torres de Celular: Dão uma estimativa inicial rápida baseada no IP e força do sinal das antenas próximas (baixa precisão).
-
-Antena GNSS (GPS/GLONASS/Galileo): Como o FastMap exige o perfil de Alta Precisão (High Accuracy), o OS liga a antena principal para buscar o sinal direto dos satélites (alta precisão, mas com um tempo de warm-up maior).
-
-Sensores de Movimento: Acelerômetro e giroscópio ajudam o OS a saber se o usuário está se movendo, suavizando o deslocamento no mapa.
-
-O Retorno Contínuo (Event Sink): O sistema operacional compila todos esses cálculos em um único pacote de dados e o envia de volta pela ponte (EventChannel) para o Flutter em formato de Stream (um fluxo contínuo). O Flutter recebe, decodifica e converte isso em um objeto de localização que contém a Latitude (Y), Longitude (X), Altitude (Z) e o Raio de Precisão Estimado em metros.
-
-#### 4.2. Precisão e Acurácia (Limitações do Hardware Mobile)
-
-É fundamental que os usuários do FastMap Mobile entendam a diferença entre um equipamento topográfico profissional (RTK) e um smartphone:
-
-Equipamento RTK Profissional: Possui precisão milimétrica ou centimétrica, pois utiliza antenas de dupla frequência e correção de base terrestre em tempo real.
-
-Smartphone Comercial: Utiliza antenas de frequência única (geralmente L1). A precisão natural do hardware de um smartphone moderno, em condições ideais de céu aberto, varia entre 3 a 5 metros de raio de erro.
-
-Fatores que afetam a precisão da coleta no FastMap:
-
-Efeito Multipath: Se o mapeamento ocorrer perto de construções altas, montanhas de pedra ou copas de árvores muito densas, o sinal do satélite "bate" no obstáculo antes de chegar ao celular, atrasando o tempo do sinal e gerando falsas distâncias (jogando o ponto metros para o lado).
-
-Céu Fechado: Nuvens muito densas ou chuvas fortes degradam a força do sinal.
-
-Aquecimento do Chip: A coleta contínua sob o sol esquenta o dispositivo, o que pode causar thermal throttling e reduzir o desempenho da fusão de sensores do Android.
-
-#### 4.3. Boas Práticas de Uso
-
-Para garantir a melhor precisão possível no cálculo da área via FastMap:
-
-Aguardar alguns segundos no local do vértice antes de registrar o ponto, permitindo que o hardware estabilize a conexão com mais satélites.
-
-Evitar marcar pontos enquanto estiver em movimento rápido ou com o celular no bolso.
-
-Realizar coletas preferencialmente em áreas de "céu aberto" para que o celular tenha linha de visada com pelo menos 4 satélites (mínimo necessário para triangular a posição em 3D).
-
-### 5. Fluxo de Dados (Cloud / Supabase)
-
-A estrutura de banco de dados foi modelada para ser leve e trafegar facilmente via redes móveis 3G/4G instáveis em áreas rurais:
-
-Tabela projetos: Possui políticas de segurança RLS (Row Level Security) garantindo que um usuário (auth.uid()) só possa ler, alterar ou deletar os seus próprios projetos.
-
-Coluna de Coordenadas (jsonb): Ao invés de criar tabelas relacionais complexas, toda a lista de coordenadas (List<LatLng>) gerada no mapa é empacotada em uma estrutura de dados leve (JSON Array) e salva na mesma linha do projeto, garantindo que o carregamento da tela Home consuma o mínimo de banda de internet possível.
