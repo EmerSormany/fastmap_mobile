@@ -1,5 +1,5 @@
+import 'package:fastmap_mobile/features/form/controllers/formulario_terreno_controller.dart';
 import 'package:flutter/material.dart';
-import '../map/coleta_mapa_screen.dart';
 import '../../../core/models/terreno_model.dart';
 
 class FormularioTerrenoScreen extends StatefulWidget {
@@ -14,6 +14,7 @@ class FormularioTerrenoScreen extends StatefulWidget {
 
 class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _controller = FormularioTerrenoController();
 
   String nomeProjeto = '';
   String proprietario = '';
@@ -23,12 +24,62 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
   String numero = '';
   String telefone = '';
 
+  bool _isSaving = false;
+
+  // Função 1: Apenas atualiza os dados textuais no banco e volta pra Home
+  Future<void> _atualizarApenasDados() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() => _isSaving = true);
+
+      TerrenoModel terrenoAtualizado = TerrenoModel(
+        id: widget.editandoProjeto!.id,
+        nomeProjeto: nomeProjeto.trim(),
+        proprietario: proprietario.trim(),
+        telefone: telefone.trim(),
+        cidade: cidade.trim(),
+        uf: uf.toUpperCase().trim(),
+        bairro: bairro.trim(),
+        numero: numero.trim(),
+        pontos: widget.editandoProjeto!.pontos,
+      );
+
+      // chama controller do banco de dados
+      await _controller.atualizarApenasDados(context, terrenoAtualizado);
+
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  // Função 2: Segue para a tela do Mapa (seja para criar um novo ou editar os pontos de um existente)
+  void _irParaMapa() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      TerrenoModel terrenoAtual = TerrenoModel(
+        id: widget.editandoProjeto?.id,
+        nomeProjeto: nomeProjeto.trim(),
+        proprietario: proprietario.trim(),
+        telefone: telefone.trim(),
+        cidade: cidade.trim(),
+        uf: uf.toUpperCase().trim(),
+        bairro: bairro.trim(),
+        numero: numero.trim(),
+        pontos: widget.editandoProjeto?.pontos ?? [], // passa lista vazia se não houver pontos
+      );
+
+      // chama controller do banco de dados
+      _controller.irParaMapa(context, terrenoAtual);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final estaEditando = widget.editandoProjeto != null;
 
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         title: Text(
           estaEditando ? 'Editar Projeto' : 'Novo Projeto',
           style: TextStyle(color: Colors.white),
@@ -183,43 +234,60 @@ class _FormularioTerrenoScreenState extends State<FormularioTerrenoScreen> {
 
               const SizedBox(height: 32),
 
-              ElevatedButton.icon(
-                icon: const Icon(Icons.play_arrow),
-                label: Text(
-                  estaEditando ? 'SALVAR E CONTINUAR' : 'INICIAR MAPEAMENTO',
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
+              // seleciona botões de edição ou de novo projeto
+              if (estaEditando) ...[
+                // Botão Primário: Salvar os textos e voltar
+                ElevatedButton.icon(
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.save),
 
-                    // Epacotamento das variáveis inciais do terreno
-                    TerrenoModel novoTerreno = TerrenoModel(
-                      id: widget.editandoProjeto?.id,
-                      nomeProjeto: nomeProjeto.trim(),
-                      proprietario: proprietario.trim(),
-                      cidade: cidade.trim(),
-                      uf: uf.trim().toUpperCase(),
-                      bairro: bairro.trim(),
-                      numero: numero.trim(),
-                      telefone: telefone.trim(),
-                    );
+                  label: Text(_isSaving ? 'ATUALIZANDO...' : 'ATUALIZAR DADOS'),
 
-                    // Enia o terreno para a próxima página e icrementa com os pontos coletados
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ColetaMapaScreen(terreno: novoTerreno),
-                      ),
-                    );
-                  }
-                },
-              ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+
+                  onPressed: _isSaving ? null : _atualizarApenasDados,
+                ),
+
+                const SizedBox(height: 12),
+
+                // Botão Secundário: Continuar para alterar os pontos no mapa
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.map),
+                  label: const Text('EDITAR MAPA DO TERRENO'),
+
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    foregroundColor: Colors.teal,
+                    side: const BorderSide(color: Colors.teal, width: 2),
+                  ),
+
+                  onPressed: _isSaving ? null : _irParaMapa,
+                ),
+              ] else ...[
+                // Botão de fluxo normal para novos projetos
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('INICIAR MAPEAMENTO'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: _irParaMapa,
+                ),
+              ],
             ],
           ),
         ),
