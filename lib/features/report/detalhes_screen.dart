@@ -1,10 +1,14 @@
 import 'package:fastmap_mobile/core/utils/croqui_pintos.dart';
+import 'package:fastmap_mobile/core/utils/gerador_pdf.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:utm/utm.dart';
 import '../../../core/models/terreno_model.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 class DetalhesScreen extends StatefulWidget {
   final TerrenoModel terreno; // Recebe o modelo completo em vez de apenas os pontos
@@ -17,6 +21,10 @@ class DetalhesScreen extends StatefulWidget {
 
 class _DetalhesScreenState extends State<DetalhesScreen> {
   bool _isSaving = false;
+
+  final GlobalKey _mapaKey = GlobalKey();
+  final GlobalKey _croquiKey = GlobalKey();
+  bool _isGeneratingPdf = false;
 
   Future<void> _salvarProjeto() async {
     setState(() => _isSaving = true);
@@ -100,9 +108,12 @@ class _DetalhesScreenState extends State<DetalhesScreen> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+        
+          children: [
           // cabeçalho do do terreno
           Card(
             color: Colors.white,
@@ -239,10 +250,14 @@ class _DetalhesScreenState extends State<DetalhesScreen> {
                   SizedBox(
                     height: 250,
                     width: double.infinity,
-                    // Pintor Matemático que usa o UTM para desenho perfeitamente proporcional
-                    child: CustomPaint(
-                      painter: CroquiPainter(utmPoints: utmPoints),
-                    ),
+                    // Captura desenho croqui do terreno
+                    child: RepaintBoundary(
+                      key: _croquiKey,
+                      // Pintor Matemático que usa o UTM para desenho perfeitamente proporcional
+                      child: CustomPaint(
+                        painter: CroquiPainter(utmPoints: utmPoints),
+                      ),
+                    )
                   ),
                 ],
               ),
@@ -266,43 +281,47 @@ class _DetalhesScreenState extends State<DetalhesScreen> {
                   height: 250,
                   // IgnorePointer bloqueia o toque para agir como uma imagem impressa (print)
                   child: IgnorePointer(
-                    child: FlutterMap(
-                      options: MapOptions(
-                        maxZoom: 18,
-                        // O CameraFit.bounds garante que o mapa foque perfeitamente nos pontos simulando o zoom ideal
-                        initialCameraFit: CameraFit.bounds(
-                          bounds: LatLngBounds.fromPoints(pontos),
-                          padding: const EdgeInsets.all(40.0),
+                    // Captura mapa do terreno
+                    child: RepaintBoundary(
+                      key: _mapaKey,
+                      child: FlutterMap(
+                        options: MapOptions(
+                          maxZoom: 18,
+                          // O CameraFit.bounds garante que o mapa foque perfeitamente nos pontos simulando o zoom ideal
+                          initialCameraFit: CameraFit.bounds(
+                            bounds: LatLngBounds.fromPoints(pontos),
+                            padding: const EdgeInsets.all(40.0),
+                          ),
                         ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                            userAgentPackageName: 'com.fastmap.mobile',
+                          ),
+                          PolygonLayer(
+                            polygons: [
+                              Polygon(
+                                points: pontos,
+                                color: Colors.teal.withOpacity(0.3),
+                                borderColor: Colors.teal,
+                                borderStrokeWidth: 3.0,
+                              ),
+                            ],
+                          ),
+                          MarkerLayer(
+                            markers: pontos.asMap().entries.map((entry) {
+                              return Marker(
+                                point: entry.value,
+                                width: 30,
+                                height: 30,
+                                alignment: Alignment.topCenter,
+                                child: const Icon(Icons.location_on, color: Colors.red, size: 30),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                       ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                          userAgentPackageName: 'com.fastmap.mobile',
-                        ),
-                        PolygonLayer(
-                          polygons: [
-                            Polygon(
-                              points: pontos,
-                              color: Colors.teal.withOpacity(0.3),
-                              borderColor: Colors.teal,
-                              borderStrokeWidth: 3.0,
-                            ),
-                          ],
-                        ),
-                        MarkerLayer(
-                          markers: pontos.asMap().entries.map((entry) {
-                            return Marker(
-                              point: entry.value,
-                              width: 30,
-                              height: 30,
-                              alignment: Alignment.topCenter,
-                              child: const Icon(Icons.location_on, color: Colors.red, size: 30),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
+                    )
                   ),
                 ),
               ],
@@ -310,6 +329,7 @@ class _DetalhesScreenState extends State<DetalhesScreen> {
           ),
           const SizedBox(height: 16),
         ],
+        ),
       ),
 
       // botões de gerar pdf e salvar no banco
@@ -352,14 +372,32 @@ class _DetalhesScreenState extends State<DetalhesScreen> {
                     foregroundColor: Colors.white,
                   ),
                   
-                  onPressed: () {
-                    // TODO: Implementar a geração real do PDF nas próximas etapas
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Preparando geração do PDF... Em breve!'),
-                        backgroundColor: Colors.teal,
-                      ),
-                    );
+                  onPressed: _isGeneratingPdf ? null : () async {
+                    setState(() => _isGeneratingPdf = true);
+                    try {
+                      // Tira print do Mapa
+                      RenderRepaintBoundary boundaryMapa = _mapaKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+                      ui.Image imageMapa = await boundaryMapa.toImage(pixelRatio: 2.0); // pixelRatio 2 melhora a resolução
+                      ByteData? byteDataMapa = await imageMapa.toByteData(format: ui.ImageByteFormat.png);
+                      Uint8List mapaBytes = byteDataMapa!.buffer.asUint8List();
+
+                      // Tira print do Croqui
+                      RenderRepaintBoundary boundaryCroqui = _croquiKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+                      ui.Image imageCroqui = await boundaryCroqui.toImage(pixelRatio: 2.0);
+                      ByteData? byteDataCroqui = await imageCroqui.toByteData(format: ui.ImageByteFormat.png);
+                      Uint8List croquiBytes = byteDataCroqui!.buffer.asUint8List();
+
+                      // Envia tudo para o nosso gerador de PDF
+                      await GeradorPdf.gerarRelatorio(
+                        terreno: widget.terreno,
+                        mapaBytes: mapaBytes,
+                        croquiBytes: croquiBytes,
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao gerar PDF: $e')));
+                    } finally {
+                      setState(() => _isGeneratingPdf = false);
+                    }
                   },
               ),
               ),
